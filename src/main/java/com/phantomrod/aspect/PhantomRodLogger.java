@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -22,11 +23,10 @@ import org.springframework.stereotype.Component;
 public class PhantomRodLogger {
 	private static final Logger LOGGER = LoggerFactory.getLogger("PhantomRod");
 	private static final boolean timeLogs = true;
+	private static AtomicLong id = new AtomicLong(0);
 	
 	@Around("execution (* com.phantomrod..*.*(..))")
 	public Object beforeMethods(ProceedingJoinPoint joinPoint) throws Throwable {
-		long loggingId = getUniqueId();
-		
 		//time the method execution:
 		long beginning = System.nanoTime();
 		Object result = joinPoint.proceed();
@@ -40,7 +40,7 @@ public class PhantomRodLogger {
 		String args = Arrays.stream(joinPoint.getArgs()).map((o) -> o+"").collect(Collectors.joining(", "));
 		
 		//log the method's meta data and its execution time
-		LOGGER.info("{}: {}.{}({}) - {}ms", loggingId,  className, methodName, args, elapsed);
+		LOGGER.info("{}: {}.{}({}) - {}ms", id.getAndIncrement(),  className, methodName, args, elapsed);
 		
 		//record the method execution time
 		if (timeLogs)
@@ -52,8 +52,8 @@ public class PhantomRodLogger {
 	//logs a method call time
 	private static Map<String, List<Long>> methodTimes = Collections.synchronizedMap(new HashMap<String, List<Long>>());
 	private static void addTime(String key, long time) {
-		if (!methodTimes.containsKey(key))
-			methodTimes.put(key, Collections.synchronizedList(new ArrayList<Long>()));
+		methodTimes.putIfAbsent(key, Collections.synchronizedList(new ArrayList<Long>()));
+		
 		methodTimes.get(key).add(time);
 	}
 	
@@ -75,10 +75,5 @@ public class PhantomRodLogger {
 			
 			LOGGER.info("{} - average: {}ms, max: {}ms, min: {}ms", methodId, average, maximum, minimum);
 		}
-	}
-	
-	private static long id = 0;
-	private static synchronized long getUniqueId() {
-		return id++;
 	}
 }

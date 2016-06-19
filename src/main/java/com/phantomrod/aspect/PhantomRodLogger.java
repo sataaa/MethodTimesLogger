@@ -33,14 +33,15 @@ public class PhantomRodLogger {
 		//time the method execution:
 		long beginning = System.nanoTime();
 		Object result = joinPoint.proceed();
-		long elapsed = (System.nanoTime() - beginning) / 1000000; // in millis
+		long elapsed = (System.nanoTime() - beginning) / 1000000; // in milliseconds
 		
 		//get the method's meta-data
 		String className = joinPoint.getTarget().getClass().getName();
 		String methodName = MethodSignature.class.cast(joinPoint.getSignature()).getMethod().getName();
 		
-		//casts the argument object array to string before joining every value with commas
-		String args = Arrays.stream(joinPoint.getArgs()).map((o) -> o+"").collect(Collectors.joining(", "));
+		String args = Arrays.stream(joinPoint.getArgs())
+				.map(String::valueOf) //Turn it into a string stream
+				.collect(Collectors.joining(", "));  //join the strings with a comma between values
 		
 		//log the method's meta data and its execution time
 		LOGGER.info("{}: {}.{}({}) - {}ms", logId,  className, methodName, args, elapsed);
@@ -72,7 +73,7 @@ public class PhantomRodLogger {
 		long minimum;
 		for (String methodId : methodTimes.keySet()) {
 			times = methodTimes.get(methodId);
-			average = times.stream().collect(Collectors.averagingDouble((number) -> Double.valueOf(number)));
+			average = times.stream().collect(Collectors.averagingDouble(Double::valueOf));
 			maximum = times.stream().max(Long::compare).get();
 			minimum = times.stream().min(Long::compare).get();
 			

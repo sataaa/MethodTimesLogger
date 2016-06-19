@@ -27,6 +27,9 @@ public class PhantomRodLogger {
 	
 	@Around("execution (* com.phantomrod..*.*(..))")
 	public Object beforeMethods(ProceedingJoinPoint joinPoint) throws Throwable {
+		//get a unique ID for this log
+		long logId = id.getAndIncrement();
+		
 		//time the method execution:
 		long beginning = System.nanoTime();
 		Object result = joinPoint.proceed();
@@ -40,7 +43,7 @@ public class PhantomRodLogger {
 		String args = Arrays.stream(joinPoint.getArgs()).map((o) -> o+"").collect(Collectors.joining(", "));
 		
 		//log the method's meta data and its execution time
-		LOGGER.info("{}: {}.{}({}) - {}ms", id.getAndIncrement(),  className, methodName, args, elapsed);
+		LOGGER.info("{}: {}.{}({}) - {}ms", logId,  className, methodName, args, elapsed);
 		
 		//record the method execution time
 		if (TIMELOGS)

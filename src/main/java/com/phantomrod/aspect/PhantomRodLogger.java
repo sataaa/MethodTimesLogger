@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 @Aspect
 public class PhantomRodLogger {
 	private static final Logger LOGGER = LoggerFactory.getLogger("PhantomRod");
-	private static final boolean timeLogs = true;
+	private static final boolean TIMELOGS = true;
 	private static AtomicLong id = new AtomicLong(0);
 	
 	@Around("execution (* com.phantomrod..*.*(..))")
@@ -43,7 +43,7 @@ public class PhantomRodLogger {
 		LOGGER.info("{}: {}.{}({}) - {}ms", id.getAndIncrement(),  className, methodName, args, elapsed);
 		
 		//record the method execution time
-		if (timeLogs)
+		if (TIMELOGS)
 			addTime(className + "." + methodName, elapsed);
 		
 		return result;
@@ -60,7 +60,7 @@ public class PhantomRodLogger {
 	//aspect at the end of the loop() service to log the times
 	@After("execution (* com.phantomrod.service.Looper.loop())")
 	public void logTimes() {
-		if (!timeLogs) 
+		if (!TIMELOGS) 
 			return;
 		
 		List<Long> times;

@@ -73,8 +73,8 @@ public class PhantomRodLogger {
 		for (String methodId : methodTimes.keySet()) {
 			times = methodTimes.get(methodId);
 			average = times.stream().collect(Collectors.averagingDouble((number) -> Double.valueOf(number)));
-			maximum = times.stream().max((x,y) -> Long.compare(x, y)).get();
-			minimum = times.stream().min((x,y) -> Long.compare(x, y)).get();
+			maximum = times.stream().max(Long::compare).get();
+			minimum = times.stream().min(Long::compare).get();
 			
 			LOGGER.info("{} - average: {}ms, max: {}ms, min: {}ms", methodId, average, maximum, minimum);
 		}
